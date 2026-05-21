@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Rotation Board</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f6f7f2;
+      --panel: #ffffff;
+      --text: #17231f;
+      --muted: #66736d;
+      --border: #d9e0d8;
+      --accent: #256f5a;
+      --accent-dark: #1d5848;
+      --accent-soft: #e4f3ed;
+      --active: #f4c95d;
+      --active-soft: #fff6dd;
+      --danger: #b43b32;
+      --danger-soft: #fff0ee;
+      --shadow: 0 18px 44px rgba(42, 53, 48, 0.1);
+      --card-shadow: 0 12px 28px rgba(42, 53, 48, 0.12);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.5;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      min-height: 48px;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 800;
+      transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 4px solid rgba(37, 111, 90, 0.22);
+      outline-offset: 2px;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .app {
+      width: min(980px, 100%);
+      margin: 0 auto;
+      padding: 46px 18px;
+    }
+
+    .hero {
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(2.75rem, 9vw, 5.5rem);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0 auto;
+      max-width: 720px;
+      color: var(--muted);
+      font-size: clamp(1.25rem, 3.4vw, 1.8rem);
+      line-height: 1.35;
+    }
+
+    .board {
+      display: grid;
+      gap: 22px;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      padding: 26px;
+    }
+
+    .add-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+    }
+
+    .name-input {
+      width: 100%;
+      min-height: 70px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 0 22px;
+      background: #fbfcfa;
+      color: var(--text);
+      font-size: clamp(1.45rem, 4vw, 2rem);
+      font-weight: 700;
+    }
+
+    .name-input::placeholder {
+      color: #97a19c;
+    }
+
+    .primary-button {
+      padding: 0 24px;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 1.25rem;
+    }
+
+    .primary-button:hover {
+      background: var(--accent-dark);
+    }
+
+    .board-actions {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 22px;
+      align-items: center;
+    }
+
+    .status {
+      display: grid;
+      gap: 2px;
+    }
+
+    .status-label {
+      color: var(--muted);
+      font-size: 1.08rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .status-value {
+      color: var(--text);
+      font-size: clamp(1.8rem, 5.6vw, 3rem);
+      font-weight: 900;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: flex-end;
+    }
+
+    .secondary-button,
+    .danger-button {
+      padding: 0 18px;
+      border: 2px solid transparent;
+      background: #eef3f0;
+      color: var(--text);
+      font-size: 1.15rem;
+    }
+
+    .secondary-button:hover {
+      background: var(--accent-soft);
+      border-color: #c9e3d9;
+    }
+
+    .danger-button {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .danger-button:hover {
+      border-color: #ffd0ca;
+      background: #ffe5e0;
+    }
+
+    .rotation-list {
+      display: grid;
+      gap: 18px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .person {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: center;
+      border: 2px solid #e3e8e1;
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: var(--card-shadow);
+      padding: 22px;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    }
+
+    .person:hover {
+      border-color: #ccd7cf;
+      box-shadow: 0 16px 34px rgba(42, 53, 48, 0.14);
+      transform: translateY(-1px);
+    }
+
+    .person.active {
+      border-color: #d8a821;
+      background: var(--active-soft);
+      box-shadow: inset 10px 0 0 var(--active), 0 18px 38px rgba(135, 98, 15, 0.18);
+    }
+
+    .position {
+      display: grid;
+      place-items: center;
+      width: 72px;
+      height: 72px;
+      border-radius: 8px;
+      background: #eef3f0;
+      color: #3c4a44;
+      font-size: 1.8rem;
+      font-weight: 900;
+    }
+
+    .person.active .position {
+      background: var(--active);
+      color: #2b2209;
+    }
+
+    .person-name {
+      min-width: 0;
+      color: var(--text);
+      font-size: clamp(1.9rem, 5.8vw, 3.25rem);
+      font-weight: 900;
+      line-height: 1.12;
+      overflow-wrap: anywhere;
+    }
+
+    .current-tag {
+      display: inline-block;
+      margin-top: 10px;
+      color: #6d5311;
+      font-size: 1.08rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .icon-button {
+      display: inline-grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      border: 2px solid #d7ded9;
+      background: #fbfcfa;
+      color: var(--text);
+      padding: 0;
+    }
+
+    .icon-button:hover {
+      border-color: #c3d1ca;
+      background: #eef3f0;
+    }
+
+    .icon-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.38;
+      transform: none;
+    }
+
+    .remove-button {
+      border-color: #f3cbc6;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .empty-state {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 34px 18px;
+      background: #fbfcfa;
+      color: var(--muted);
+      font-size: clamp(1.35rem, 4vw, 1.8rem);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 720px) {
+      .app {
+        padding: 34px 12px;
+      }
+
+      .panel {
+        padding: 18px;
+      }
+
+      .add-form,
+      .board-actions,
+      .person {
+        grid-template-columns: 1fr;
+      }
+
+      .add-form,
+      .board-actions {
+        gap: 14px;
+      }
+
+      .primary-button,
+      .secondary-button,
+      .danger-button {
+        width: 100%;
+      }
+
+      .action-row {
+        justify-content: stretch;
+      }
+
+      .status {
+        text-align: center;
+      }
+
+      .person {
+        gap: 14px;
+        padding: 18px;
+      }
+
+      .position {
+        width: 100%;
+        height: 52px;
+      }
+
+      .row-actions {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        width: 100%;
+      }
+
+      .icon-button {
+        width: 100%;
+        height: 56px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <h1>Simple Rotation Board</h1>
+      <p class="subtitle">Organise groups and rotations clearly and easily</p>
+    </header>
+
+    <section class="board" aria-label="Rotation board">
+      <div class="panel">
+        <form class="add-form" id="addForm">
+          <label class="sr-only" for="nameInput">Name</label>
+          <input class="name-input" id="nameInput" type="text" placeholder="Add a name" autocomplete="off" required />
+          <button class="primary-button" type="submit">Add Name</button>
+        </form>
+      </div>
+
+      <div class="panel board-actions">
+        <div class="status" aria-live="polite">
+          <span class="status-label">Current active position</span>
+          <span class="status-value" id="activeName">No names yet</span>
+        </div>
+
+        <div class="action-row">
+          <button class="secondary-button" id="nextButton" type="button">Next Turn</button>
+          <button class="danger-button" id="resetButton" type="button">Reset List</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <ol class="rotation-list" id="rotationList"></ol>
+        <p class="empty-state" id="emptyState">Add names to start the rotation.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const storageKey = "simple-rotation-board-state";
+    const addForm = document.querySelector("#addForm");
+    const nameInput = document.querySelector("#nameInput");
+    const activeName = document.querySelector("#activeName");
+    const nextButton = document.querySelector("#nextButton");
+    const resetButton = document.querySelector("#resetButton");
+    const rotationList = document.querySelector("#rotationList");
+    const emptyState = document.querySelector("#emptyState");
+
+    let state = loadState();
+
+    addForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const name = nameInput.value.trim();
+
+      if (!name) {
+        return;
+      }
+
+      state.names.push(name);
+
+      if (state.activeIndex < 0) {
+        state.activeIndex = 0;
+      }
+
+      nameInput.value = "";
+      nameInput.focus();
+      saveAndRender();
+    });
+
+    nextButton.addEventListener("click", () => {
+      if (!state.names.length) {
+        return;
+      }
+
+      state.activeIndex = (state.activeIndex + 1) % state.names.length;
+      saveAndRender();
+    });
+
+    resetButton.addEventListener("click", () => {
+      state = {
+        names: [],
+        activeIndex: -1
+      };
+
+      saveAndRender();
+      nameInput.focus();
+    });
+
+    rotationList.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-action]");
+
+      if (!button) {
+        return;
+      }
+
+      const index = Number(button.dataset.index);
+      const action = button.dataset.action;
+
+      if (action === "up") {
+        moveName(index, index - 1);
+      }
+
+      if (action === "down") {
+        moveName(index, index + 1);
+      }
+
+      if (action === "remove") {
+        removeName(index);
+      }
+
+      saveAndRender();
+    });
+
+    function loadState() {
+      const fallback = {
+        names: [],
+        activeIndex: -1
+      };
+
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey));
+
+        if (!saved || !Array.isArray(saved.names)) {
+          return fallback;
+        }
+
+        const names = saved.names.filter((name) => typeof name === "string");
+        const activeIndex = normalizeActiveIndex(Number(saved.activeIndex), names.length);
+
+        return { names, activeIndex };
+      } catch {
+        return fallback;
+      }
+    }
+
+    function saveAndRender() {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+      render();
+    }
+
+    function moveName(fromIndex, toIndex) {
+      if (toIndex < 0 || toIndex >= state.names.length) {
+        return;
+      }
+
+      const [movedName] = state.names.splice(fromIndex, 1);
+      state.names.splice(toIndex, 0, movedName);
+
+      if (state.activeIndex === fromIndex) {
+        state.activeIndex = toIndex;
+      } else if (state.activeIndex === toIndex) {
+        state.activeIndex = fromIndex;
+      }
+    }
+
+    function removeName(index) {
+      state.names.splice(index, 1);
+
+      if (!state.names.length) {
+        state.activeIndex = -1;
+        return;
+      }
+
+      if (index < state.activeIndex) {
+        state.activeIndex -= 1;
+      }
+
+      if (index === state.activeIndex) {
+        state.activeIndex = Math.min(index, state.names.length - 1);
+      }
+
+      state.activeIndex = normalizeActiveIndex(state.activeIndex, state.names.length);
+    }
+
+    function normalizeActiveIndex(index, count) {
+      if (!count) {
+        return -1;
+      }
+
+      if (!Number.isInteger(index) || index < 0) {
+        return 0;
+      }
+
+      return Math.min(index, count - 1);
+    }
+
+    function render() {
+      state.activeIndex = normalizeActiveIndex(state.activeIndex, state.names.length);
+      rotationList.innerHTML = "";
+
+      activeName.textContent = state.names.length
+        ? `${state.activeIndex + 1}. ${state.names[state.activeIndex]}`
+        : "No names yet";
+
+      nextButton.disabled = state.names.length < 2;
+      resetButton.disabled = !state.names.length;
+      emptyState.hidden = state.names.length > 0;
+
+      state.names.forEach((name, index) => {
+        const item = document.createElement("li");
+        item.className = index === state.activeIndex ? "person active" : "person";
+
+        const position = document.createElement("span");
+        position.className = "position";
+        position.textContent = index + 1;
+
+        const nameWrap = document.createElement("div");
+        const nameText = document.createElement("div");
+        nameText.className = "person-name";
+        nameText.textContent = name;
+        nameWrap.append(nameText);
+
+        if (index === state.activeIndex) {
+          const tag = document.createElement("span");
+          tag.className = "current-tag";
+          tag.textContent = "Current";
+          nameWrap.append(tag);
+        }
+
+        const actions = document.createElement("div");
+        actions.className = "row-actions";
+        actions.append(
+          createIconButton("up", index, "Move up", index === 0, arrowIcon("up")),
+          createIconButton("down", index, "Move down", index === state.names.length - 1, arrowIcon("down")),
+          createIconButton("remove", index, "Remove name", false, removeIcon())
+        );
+
+        item.append(position, nameWrap, actions);
+        rotationList.append(item);
+      });
+    }
+
+    function createIconButton(action, index, label, disabled, icon) {
+      const button = document.createElement("button");
+      button.className = action === "remove" ? "icon-button remove-button" : "icon-button";
+      button.type = "button";
+      button.dataset.action = action;
+      button.dataset.index = index;
+      button.disabled = disabled;
+      button.setAttribute("aria-label", `${label}: ${state.names[index]}`);
+      button.innerHTML = icon;
+
+      return button;
+    }
+
+    function arrowIcon(direction) {
+      const points = direction === "up" ? "12 5 5 12 8 12 8 19 16 19 16 12 19 12" : "12 19 19 12 16 12 16 5 8 5 8 12 5 12";
+
+      return `<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M${points}Z"></path></svg>`;
+    }
+
+    function removeIcon() {
+      return '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
+    }
+
+    render();
+  </script>
+</body>
+</html>
